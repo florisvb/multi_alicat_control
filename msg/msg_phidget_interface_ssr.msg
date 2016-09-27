@@ -1,3 +1,3 @@
 Header header
-uint8[] ports
-uint8[] states
+int8[] ports
+int8[] states
