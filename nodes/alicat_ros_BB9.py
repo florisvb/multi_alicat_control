@@ -10,9 +10,11 @@ from multi_alicat_control.msg import msg_phidget_interface_ssr, msg_bb9
 import time
 import imp
 import alicat
+import threading
 
 class BB9AlicatFlowController:
     def __init__(self, port="/dev/alicat_bb9", addresses=['A', 'B'], publish_rate=1, publish_name_base='/alicat_flow_rate', subscribe_name='/alicat_bb9'):
+        self.lockBuffer = threading.Lock()
         self.port = port
         self.publish_rate = publish_rate
         self.addresses = addresses
@@ -21,17 +23,19 @@ class BB9AlicatFlowController:
         self.publishers = {address: rospy.Publisher(publish_name_base+'_'+address, Float32, queue_size=10) for address in addresses}
         
     def flow_control_callback(self, data):
-        for i, address in enumerate(data.address):
-            self.flow_controllers[address].set_flow_rate(data.flowrate[i])
+        with self.lockBuffer:
+            for i, address in enumerate(data.addresses):
+                self.flow_controllers[address].set_flow_rate(data.flowrates[i])
             
     def publish_flow_rates(self):
-        flowrate = []
-        for address in self.addresses:
-            f = self.flow_controllers[address].get()['mass_flow'] 
-            flowrate.append( f )
-            self.publishers[address].publish(f)
-        print self.addresses
-        print flowrate
+        with self.lockBuffer:
+            flowrate = []
+            for address in self.addresses:
+                f = self.flow_controllers[address].get()['mass_flow'] 
+                flowrate.append( f )
+                self.publishers[address].publish(f)
+            print self.addresses
+            print flowrate
             
     def main(self):
         rate = rospy.Rate(self.publish_rate) # 10hz
@@ -73,7 +77,7 @@ if __name__ == '__main__':
             
 '''
 
-rostopic pub /alicat_bb9 multi_alicat_control/msg_bb9 '{address:  ['A', 'B'], flowrate: [0, 0]}'
+rostopic pub /alicat_bb9 multi_alicat_control/msg_bb9 '{addresses:  ['A', 'B', 'C'], flowrates: [20, 20, 2]}'
 
 '''
             
