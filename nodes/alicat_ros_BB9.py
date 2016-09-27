@@ -8,7 +8,7 @@ import numpy as np
 from std_msgs.msg import Float32, Header, String
 from multi_alicat_control.msg import msg_phidget_interface_ssr, msg_bb9
 import time
-
+import imp
 import alicat
 
 class BB9AlicatFlowController:

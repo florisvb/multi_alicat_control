@@ -31,7 +31,7 @@ class PhidgetsDAQ:
         subscribes to /phidgets_interface_ssr topic, and connects received messages with setting the output on the phidget
         '''
         self.phidget = phidget
-        self.subscriber = rospy.Subscriber('/phidgets_interface_ssr', msg_phidgets_interface_ssr, self.set_digital_output)
+        self.subscriber = rospy.Subscriber('/phidgets_interface_ssr', msg_phidget_interface_ssr, self.set_digital_output)
 
     def set_digital_output(self, digital_output):
         for i in range(len(digital_output.ports)):
