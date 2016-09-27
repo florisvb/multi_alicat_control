@@ -129,3 +129,8 @@ if __name__ == '__main__':
     phidgets_daq.initialize_digital_outputs(phidget)
     phidgets_daq.run()
 
+'''
+
+rostopic pub /phidgets_interface_ssr multi_alicat_control/msg_phidget_interface_ssr '{ports:  [0, 1], states: [0, 1]}'
+
+'''
