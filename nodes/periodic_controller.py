@@ -42,6 +42,7 @@ class PeriodicFlowController(object):
         rospy.init_node(nodename)
         self.publisher = rospy.Publisher(action_and_flowrate_topic, msg_action_and_flowrate, queue_size=10)
         
+        time.sleep(2) # allow other stuff to start
         self.main()
         
     def get_current_flowrate(self):
@@ -68,6 +69,11 @@ class PeriodicFlowController(object):
 
 
     def main(self):
+        msg = msg_action_and_flowrate()
+        msg.header.stamp = rospy.Time.now()
+        msg.action = self.off_action
+        msg.flowrate = 0
+        self.publisher.publish(msg)
         self.time_started = time.time()
         time.sleep(self.delay_before_first_pulse)
         while not rospy.is_shutdown():
@@ -115,9 +121,14 @@ if __name__ == '__main__':
                         help="name of off action, if it is literally off, be sure to use double quotes")
     parser.add_option("--randomize_on_actions_order", type="int", dest="randomize_on_actions_order", default=False,
                         help="randomize the order of the on actions")
+    parser.add_option("--periodic_controller_configuration", type="str", dest="periodic_controller_configuration", default='',
+                        help="full path to a py configuration file for the periodic controller")
 
     (options, args) = parser.parse_args()
     
+    if len(options.periodic_controller_configuration) > 0:
+        periodic_controller_configuration = imp.load_source('periodic_controller_configuration', options.periodic_controller_configuration)
+        options = periodic_controller_configuration
     
     periodic_flow_controller = PeriodicFlowController(  action_and_flowrate_topic=options.action_and_flowrate_topic, 
                                                         delay_before_first_pulse=options.delay_before_first_pulse,

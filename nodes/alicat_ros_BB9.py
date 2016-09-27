@@ -54,8 +54,14 @@ if __name__ == '__main__':
                         help="topic base name to publish under")
     parser.add_option("--subscribe_name", type="str", dest="subscribe_name", default='/alicat_bb9',
                         help="topic to subscribe to")
+    parser.add_option("--bb9_configuration", type="str", dest="bb9_configuration", default='',
+                        help="full path to a python configuration file defining all of the parameters")
 
     (options, args) = parser.parse_args()
+    
+    if len(options.bb9_configuration) > 0:
+        bb9_configuration = imp.load_source('bb9_configuration', options.bb9_configuration)
+        options = bb9_configuration
     
     nodename = 'multi_alicat_controller_bb9'
     rospy.init_node(nodename)
