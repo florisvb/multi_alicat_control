@@ -25,6 +25,7 @@ class PhidgetsDAQ:
 
     def __init__(self):
         rospy.init_node('phidgets_interface_ssr', anonymous=True)
+        self.publish_rate = 1
         
     def initialize_digital_outputs(self, phidget):
         '''
@@ -32,13 +33,28 @@ class PhidgetsDAQ:
         '''
         self.phidget = phidget
         self.subscriber = rospy.Subscriber('/phidgets_interface_ssr', msg_phidget_interface_ssr, self.set_digital_output)
-
+        self.publisher  = rospy.Publisher('/phidgets_interface_ssr/output_data', msg_phidget_interface_ssr, queue_size=10)
+        self.pins = [0, 1, 2, 3]
+        
+        self.msg_prototype = msg_phidget_interface_ssr()
+            
+            
     def set_digital_output(self, digital_output):
         for i in range(len(digital_output.ports)):
             self.phidget.setOutputState(digital_output.ports[i], digital_output.states[i])    
-    
+            if i not in self.pins:
+                self.pins.append(i)
+        self.pins.sort()
+        
     def run(self):
-        rospy.spin()
+        rate = rospy.Rate(self.publish_rate) # 10hz
+        while not rospy.is_shutdown():
+            if len(self.pins) > 0:
+                data = [int(self.phidget.getOutputState(pin)) for pin in self.pins]
+                self.msg_prototype.ports = self.pins
+                self.msg_prototype.states = data
+                self.publisher.publish(self.msg_prototype)
+                rate.sleep()
         
 def connect_to_phidget(SensorChangedFunction, serial_number=None):
     #Create an interfacekit object
@@ -124,7 +140,7 @@ if __name__ == '__main__':
     print 'connecting to phidget'
     phidgets_daq = PhidgetsDAQ()
     serial_number = rospy.get_param('/phidgets_interface_ssr/serial_number', None)
-    phidget = connect_to_phidget(serial_number)
+    phidget = connect_to_phidget(None, serial_number=serial_number)
     
     phidgets_daq.initialize_digital_outputs(phidget)
     phidgets_daq.run()
