@@ -31,9 +31,12 @@ class BB9AlicatFlowController:
         with self.lockBuffer:
             flowrate = []
             for address in self.addresses:
-                f = self.flow_controllers[address].get()['mass_flow'] 
-                flowrate.append( f )
-                self.publishers[address].publish(f)
+                try:
+                    f = self.flow_controllers[address].get()['volumetric_flow'] 
+                    flowrate.append( f )
+                    self.publishers[address].publish(f)
+                except:
+                    print 'Failed to get / publish data'
             print self.addresses
             print flowrate
             
