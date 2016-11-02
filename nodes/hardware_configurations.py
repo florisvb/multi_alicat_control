@@ -40,8 +40,10 @@ class Rig(object):
         
         ssr = msg_phidget_interface_ssr()
         ssr.header.stamp = tnow
-        ssr.ports = ssr_ports
-        ssr.states = ssr_states
+        
+        if ssr_ports is not None:
+            ssr.ports = ssr_ports
+            ssr.states = ssr_states
 
         self.bb9_publisher.publish(bb9)
         
