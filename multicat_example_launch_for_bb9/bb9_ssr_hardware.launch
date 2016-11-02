@@ -1,0 +1,5 @@
+<launch>
+
+<node name="bb9_controller" pkg="multi_alicat_control" type="alicat_ros_BB9.py" output="screen" args="--bb9_configuration='/home/brainhacker/multicat/bb9_configuration.py'"  />
+
+</launch>
