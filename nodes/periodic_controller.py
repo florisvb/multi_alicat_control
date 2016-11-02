@@ -10,6 +10,14 @@ from multi_alicat_control.msg import msg_action_and_flowrate
 import time
 import imp
 
+def check_if_t_less_than_local_time(t):
+    t_local = time.localtime()
+    t_local_float = t_local.tm_hour + t_local.tm_min/60. + t_local.tm_sec/3600.
+    if t_local_float >= t:
+        return True
+    else:
+        return False
+
 class PeriodicFlowController(object):
     def __init__(self,  action_and_flowrate_topic='/rig1', 
                         delay_before_first_pulse=10,
@@ -20,9 +28,11 @@ class PeriodicFlowController(object):
                         randomize_flowrate_order=True,
                         off_action='off',
                         on_actions=['left', 'right'],
-                        randomize_on_actions_order=False):
+                        randomize_on_actions_order=False,
+                        first_pulse_local_time=-1): # float local time
         
         self.delay_before_first_pulse = delay_before_first_pulse
+        self.first_pulse_local_time = first_pulse_local_time 
         self.pulse_length = pulse_length
         self.inter_pulse_length = inter_pulse_length
         self.total_experiment_length = total_experiment_length
@@ -74,6 +84,13 @@ class PeriodicFlowController(object):
         msg.action = self.off_action
         msg.flowrate = 0
         self.publisher.publish(msg)
+        
+        if self.first_pulse_local_time >= 0:
+            wait = True
+            while wait:
+                wait = check_if_t_less_than_local_time(self.first_pulse_local_time)
+                time.sleep(1)
+        
         self.time_started = time.time()
         time.sleep(self.delay_before_first_pulse)
         while not rospy.is_shutdown():
@@ -121,6 +138,8 @@ if __name__ == '__main__':
                         help="name of off action, if it is literally off, be sure to use double quotes")
     parser.add_option("--randomize_on_actions_order", type="int", dest="randomize_on_actions_order", default=False,
                         help="randomize the order of the on actions")
+    parser.add_option("--first_pulse_local_time", type="float", dest="first_pulse_local_time", default=-1,
+                        help="what time to start first pulse")
     parser.add_option("--periodic_controller_configuration", type="str", dest="periodic_controller_configuration", default='',
                         help="full path to a py configuration file for the periodic controller")
 
@@ -140,6 +159,7 @@ if __name__ == '__main__':
                                                         off_action=options.off_action,
                                                         on_actions=eval(options.on_actions),
                                                         randomize_on_actions_order=options.randomize_on_actions_order,
+                                                        first_pulse_local_time=options.first_pulse_local_time,
                                                         )
                                                         
                                                         
