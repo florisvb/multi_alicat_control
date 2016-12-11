@@ -15,7 +15,7 @@ class Rig(object):
                         bb9_topic='/alicat_bb9', 
                         ssr_topic='/phidgets_interface_ssr', 
                         rig_function_configuration='path_to_py_file',
-                        ssr_off_delay=10):
+                        ssr_off_delay=5):
         nodename = action_and_flowrate_topic.split('/')[1]
         rospy.init_node(nodename)
         self.ssr_off_delay = ssr_off_delay # time, seconds, to wait between turning off flow and ssr on an off action
@@ -45,12 +45,15 @@ class Rig(object):
             ssr.ports = ssr_ports
             ssr.states = ssr_states
 
-        self.bb9_publisher.publish(bb9)
-        
+
         if action_and_flowrate.action == 'off':
+            self.bb9_publisher.publish(bb9)
             time.sleep(self.ssr_off_delay)
-            
-        self.ssr_publisher.publish(ssr)
+            self.ssr_publisher.publish(ssr)
+        else:
+            self.ssr_publisher.publish(ssr)
+            #time.sleep(self.ssr_off_delay)
+            self.bb9_publisher.publish(bb9)
         
 if __name__ == '__main__':
     parser = OptionParser()
